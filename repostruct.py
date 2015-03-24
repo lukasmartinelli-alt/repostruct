@@ -39,7 +39,7 @@ def analyze_repo(repo):
             file_paths = list(file_structure(local_repo.dir))
 
             for path in file_paths:
-                sys.stdout.write(path + "\n")
+                sys.stdout.write(local_repo.name + " " + path + "\n")
 
             return file_paths
     except Exception as e:
