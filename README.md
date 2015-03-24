@@ -36,3 +36,15 @@ export RQ_HOST="localhost"
 export RQ_PORT="6379"
 cat js_repos.txt | ./pusred lpush repostruct:repos
 ```
+
+Put structure of repos into results list
+
+```
+./repostruct.py --rq="repostruct:repos" | ./pusred lpush repostruct:results
+```
+
+Create a comma separated csv file of the results for better analyzing
+
+```
+./pusred lpop repostruct:results | tr ' ' ',' > js_results.csv
+```
