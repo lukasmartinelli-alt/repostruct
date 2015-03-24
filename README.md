@@ -20,6 +20,12 @@ Find the top Github repos and store them in a file.
 
 ### Use Redis List for distributing work
 
+Run redis
+
+```
+docker run --name redis -p 6379:6379 -d redis
+```
+
 I use my other Project [pusred](https://github.com/lukasmartinelli/pusred)
 for distributing jobs via a Redis List.
 
