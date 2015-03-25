@@ -26,7 +26,7 @@ Run redis
 docker run --name redis -p 6379:6379 -d redis
 ```
 
-I use my other Project [pusred](https://github.com/lukasmartinelli/pusred)
+I use my other Project [redis-pipe](https://github.com/lukasmartinelli/redis-pipe)
 for distributing jobs via a Redis List.
 
 Install
