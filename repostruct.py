@@ -13,15 +13,39 @@ Options:
 """
 import os
 import sys
+import tempfile
+import shutil
+import subprocess
+from contextlib import contextmanager
 from multiprocessing.dummy import Pool as ThreadPool
 
-from redis import Redis
 from docopt import docopt
 
-from repo import clone, GitRepo
+
+class Repo(object):
+    """A repository on Github"""
+    def __init__(self, name):
+        self.name = name
+
+    def url(self):
+        return "https://nouser:nopass@github.com/" + self.name + ".git"
+
+
+@contextmanager
+def clone(repo):
+    """Clone a repository into a temporary directory which gets cleaned
+    up afterwards"""
+    temp_dir = tempfile.mkdtemp(suffix=repo.name.split("/")[1])
+
+    with open(os.devnull, "w") as FNULL:
+        subprocess.check_call(["git", "clone", "-q", repo.url(), temp_dir],
+                              stdout=FNULL, stderr=subprocess.STDOUT)
+    yield temp_dir
+    shutil.rmtree(temp_dir)
 
 
 def file_structure(repo_path):
+    """Returns all relative file paths of a directory"""
     for path, dirs, files in os.walk(repo_path):
         for f in files:
             full_path = os.path.join(path, f)
@@ -30,7 +54,7 @@ def file_structure(repo_path):
                 yield rel_path
 
 
-def analyze_repo(repo):
+def write_repo_structure(repo):
     try:
         with clone(repo) as local_repo:
             file_paths = list(file_structure(local_repo.dir))
@@ -46,27 +70,14 @@ def analyze_repo(repo):
 
 def fetch_jobs_stdin():
     for line in sys.stdin:
-        yield GitRepo(line.strip())
-
-
-def fetch_jobs_redis(redis, list_name):
-    while redis.llen(list_name) > 0:
-        repo_name = redis.lpop(list_name).decode("utf-8")
-        yield GitRepo(repo_name)
+        yield Repo(line.strip())
 
 
 if __name__ == '__main__':
     args = docopt(__doc__)
     thread_count = int(args["-t"])
-    if args["--rq"]:
-        list_name = args["--rq"]
-        redis = Redis(host=os.environ.get("RQ_HOST", "localhost"),
-                      port=os.environ.get("RQ_PORT", "6379"))
-        for repo in fetch_jobs_redis(redis, list_name):
-            analyze_repo(repo)
-    else:
-        with ThreadPool(thread_count) as pool:
-            jobs = fetch_jobs_stdin()
-            pool.map(analyze_repo, jobs)
-            pool.close()
-            pool.join()
+    with ThreadPool(thread_count) as pool:
+        jobs = fetch_jobs_stdin()
+        pool.map(write_repo_structure, jobs)
+        pool.close()
+        pool.join()
