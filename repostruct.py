@@ -3,13 +3,12 @@
 Fetch repo and write directory structure
 
 Usage:
-    repostruct.py [-t THREADS] [--rq=<list_name>]
+    repostruct.py [-t THREADS]
     repostruct.py (-h | --help)
 
 Options:
     -h --help         Show this screen
     -t THREADS        How many threads to use in ThreadPool [default: 4]
-    --rq=<list_name>  Read input from redis list
 """
 import os
 import sys
@@ -56,11 +55,11 @@ def file_structure(repo_path):
 
 def write_repo_structure(repo):
     try:
-        with clone(repo) as local_repo:
-            file_paths = list(file_structure(local_repo.dir))
+        with clone(repo) as repo_path:
+            file_paths = list(file_structure(repo_path))
 
             for path in file_paths:
-                sys.stdout.write(local_repo.name + " " + path + "\n")
+                sys.stdout.write(repo.name + " " + path + "\n")
 
             return file_paths
     except Exception as e:
