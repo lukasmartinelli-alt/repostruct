@@ -7,6 +7,7 @@ This can help to answer questions like below:
 
 - [ ] How many people use Makefiles?
 - [ ] What is the most common folder structure for node projects?
+- [ ] Which languages adopt Docker the most (check for `Dockerfile`)
 - [ ] What is the most popular Javascript build tool (check for `Gruntfile.js` or `Gulpfile.js`)
 - [ ] What is the most popular Java build tool (check for `pom.xml` or `build.gradle`)
 - [ ] How many files are in a repo on average?
@@ -19,7 +20,19 @@ This can help to answer questions like below:
 ## Data
 
 The analyzed repos are in the folder `repo`.
-The folder structures in the folder `results`.
+
+You can download the results here:
+
+- [x] [Go](https://s3-eu-west-1.amazonaws.com/repostruct/go.txt)
+- [ ] Java
+- [ ] C#
+- [ ] Javascript
+- [ ] C++
+- [ ] C
+- [ ] PHP
+- [ ] Ruby
+- [ ] Python
+- [ ] Objective-C
 
 ## Run it yourself
 
@@ -60,4 +73,12 @@ I normally do this in batches of 100.
 
 ```
 ./redis-pipe --count 100 repostruct:repos | ./repostruct.py | ./redis-pipe repostruct:results
+```
+
+## Analyze
+
+How many Go projects use Makefiles?
+
+```
+cat go.txt | grep "Makefile " | sort -k 1 | cut -d " " -f 1 | uniq | wc -l
 ```
