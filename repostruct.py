@@ -49,7 +49,12 @@ def file_structure(repo_path):
         for f in files:
             full_path = os.path.join(path, f)
             rel_path = os.path.relpath(full_path, repo_path)
-            filesize = os.path.getsize(full_path)
+
+            try:
+                filesize = os.path.getsize(full_path)
+            except Exception:
+                filesize = 0
+
             if not rel_path.startswith('.git'):
                 yield rel_path, filesize
 
