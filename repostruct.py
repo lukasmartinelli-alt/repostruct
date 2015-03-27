@@ -44,23 +44,28 @@ def clone(repo):
 
 
 def file_structure(repo_path):
-    """Returns all relative file paths of a directory"""
+    """Returns all relative file paths and filesize of a directory"""
     for path, dirs, files in os.walk(repo_path):
         for f in files:
             full_path = os.path.join(path, f)
             rel_path = os.path.relpath(full_path, repo_path)
+            filesize = os.path.getsize(full_path)
             if not rel_path.startswith('.git'):
-                yield rel_path
+                yield rel_path, filesize
 
 
 def write_repo_structure(repo):
+    """
+    Clone repo locally and write repo name, relative filepath and
+    filesize to stdout.
+    """
     try:
         with clone(repo) as repo_path:
             file_paths = list(file_structure(repo_path))
 
-            for path in file_paths:
-                sys.stdout.write(repo.name + " " + path + "\n")
-
+            for path, filesize in file_paths:
+                sys.stdout.write("{0} {1} {2}\n"
+                                 .format(repo.name, path, filesize))
             return file_paths
     except Exception as e:
         sys.stderr.write(str(e) + '\n')
