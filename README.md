@@ -5,7 +5,7 @@ of the major programming languages.
 
 ## Dataset
 
-The list of the 400k analyzed repos are in the folder `repo`.
+The list of the 614k analyzed repos are in the folder `repo`.
 You can download the datasets for the individual languages here:
 
 - [x] [Javascript](https://s3-eu-west-1.amazonaws.com/repostruct/javascript.tar.gz)
@@ -14,8 +14,8 @@ You can download the datasets for the individual languages here:
 - [x] [Ruby](https://s3-eu-west-1.amazonaws.com/repostruct/ruby.tar.gz)
 - [x] [PHP](https://s3-eu-west-1.amazonaws.com/repostruct/php.tar.gz)
 - [x] [C++](https://s3-eu-west-1.amazonaws.com/repostruct/c%2B%2B.tar.gz)
-- [ ] C
-- [ ] C#
+- [x] [C](https://s3-eu-west-1.amazonaws.com/repostruct/c.tar.gz)
+- [x] [C#](https://s3-eu-west-1.amazonaws.com/repostruct/csharp.tar.gz)
 - [x] [Objective-C](https://s3-eu-west-1.amazonaws.com/repostruct/obj-c.tar.gz)
 - [x] [Go](https://s3-eu-west-1.amazonaws.com/repostruct/go.tar.gz)
 
