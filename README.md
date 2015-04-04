@@ -19,11 +19,15 @@ You can download the datasets for the individual languages here:
 - [x] [Objective-C](https://s3-eu-west-1.amazonaws.com/repostruct/obj-c.tar.gz)
 - [x] [Go](https://s3-eu-west-1.amazonaws.com/repostruct/go.tar.gz)
 
+You can also [download a PostgreSQL database backup](https://s3-eu-west-1.amazonaws.com/repostruct/repostruct_backup.tar) and import it for further analysis.
+But be warned, It takes along time even with a 250GB Memory machine.
+
 ## Questions
 
 Folder structures are pretty boring you think?
 This dataset could help to answer questions like below:
 
+- [x] [Which Languages use CI Services on Github?](http://lukasmartinelli.ch/cloud/2015/04/04/github-ci-services.html)
 - [ ] How many people use Makefiles?
 - [ ] What is the most common folder structure for node projects?
 - [ ] Which languages adopt Docker the most (check for `Dockerfile`)
@@ -32,9 +36,10 @@ This dataset could help to answer questions like below:
 - [ ] How many files are in a repo on average?
 - [ ] What programming languages are mixed together in a project most common?
 - [ ] Do people prefer naming the folders `css` or `stylesheets`?
-- [ ] How many people use travis?
 - [ ] Which programming languages have the deepest folder hierarchies (I guess Java?)
 - [ ] Do people keep executables or build artifacts in their repos?
+
+I blogged
 
 ## Data sample
 
