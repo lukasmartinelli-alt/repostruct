@@ -8,7 +8,7 @@ Usage:
 
 Options:
     -h --help               Show this screen
-    --rabbitmq=<ampq-url>   Connection string for RabbitMQ 
+    --rabbitmq=<ampq-url>   Connection string for RabbitMQ
 """
 import os
 import sys
@@ -21,7 +21,23 @@ from multiprocessing.dummy import Pool as ThreadPool
 from docopt import docopt
 import pika
 
-from .rabbitmq import configure_rabbitmq
+GIT_CLONE_TIMEOUT = 10
+RESULTS_QUEUE = 'repos:results'
+JOBS_QUEUE = 'repos:jobs'
+FAILED_QUEUE = 'repos:failed'
+GIT_ERROR_QUEUE = 'repos:git_error'
+GIT_TIMEOUT_QUEUE = 'repos:timeout'
+
+
+def configure_rabbitmq(channel):
+
+    def queue_declare(queue):
+        return channel.queue_declare(queue=queue, durable=True)
+
+    queue_declare(JOBS_QUEUE)
+    queue_declare(FAILED_QUEUE)
+    queue_declare(DELETED_QUEUE)
+    queue_declare(TOO_BIG_QUEUE)
 
 
 class Repo(object):
@@ -41,20 +57,10 @@ def clone(repo):
 
     with open(os.devnull, "w") as FNULL:
         subprocess.check_call(["git", "clone", "-q", repo.url(), temp_dir],
-                              stdout=FNULL, stderr=subprocess.STDOUT)
+                              stdout=FNULL, stderr=subprocess.STDOUT,
+                              timeout=GIT_CLONE_TIMEOUT)
     yield temp_dir
     shutil.rmtree(temp_dir)
-
-
-def configure_rabbitmq(channel):
-
-    def queue_declare(queue)
-        return channel.queue_declare(queue=queue, durable=True)
-
-    queue_declare(JOBS_QUEUE)
-    queue_declare(FAILED_QUEUE)
-    queue_declare(DELETED_QUEUE)
-    queue_declare(TOO_BIG_QUEUE)
 
 
 def file_structure(repo_path):
@@ -105,11 +111,24 @@ def process_jobs_rabbitmq(rabbitmq_url):
     def callback(ch, method, properties, body):
         repo = Repo(body)
 
+        def publish(queue):
+            ch.basic_publish(exchange='', routing_key=queue, body=repo.name)
+
         try:
-            write_repo_structure(repo)
+            file_paths = write_repo_structure(repo)
+            payload = {
+                repo: repo.name,
+                file_paths: file_paths
+            }
+            ch.basic_publish(exchange='', routing_key=RESULTS_QUEUE,
+                             body=json.dumps(payload))
+
+        except subprocess.CalledProcessError as e:
+            publish(GIT_ERROR_QUEUE)
+        except subprocess.TimeoutExpired as e:
+            publish(GIT_TIMEOUT_QUEUE)
         except Exception as e:
-            channel.basic_publish(exchange='', routing_key=FAILED_QUEUE,
-                                  body=repo.name)
+            publish(FAILED_QUEUE)
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -119,9 +138,10 @@ def process_jobs_rabbitmq(rabbitmq_url):
 
 if __name__ == '__main__':
     args = docopt(__doc__)
-    rabbitmq_url = args['<ampq-url>']
 
-    if rabbitmq_url:
+
+    if '<ampq-url>' in args:
+        rabbitmq_url = args['<ampq-url>']
         process_jobs_rabbitmq(rabbitmq_url)
     else:
         process_jobs_stdin()
