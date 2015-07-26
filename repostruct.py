@@ -13,10 +13,10 @@ Options:
 import os
 import sys
 import tempfile
+import json
 import shutil
 import subprocess
 from contextlib import contextmanager
-from multiprocessing.dummy import Pool as ThreadPool
 
 from docopt import docopt
 import pika
@@ -35,9 +35,10 @@ def configure_rabbitmq(channel):
         return channel.queue_declare(queue=queue, durable=True)
 
     queue_declare(JOBS_QUEUE)
+    queue_declare(RESULTS_QUEUE)
     queue_declare(FAILED_QUEUE)
-    queue_declare(DELETED_QUEUE)
-    queue_declare(TOO_BIG_QUEUE)
+    queue_declare(GIT_TIMEOUT_QUEUE)
+    queue_declare(GIT_ERROR_QUEUE)
 
 
 class Repo(object):
@@ -109,28 +110,43 @@ def process_jobs_rabbitmq(rabbitmq_url):
     configure_rabbitmq(channel)
 
     def callback(ch, method, properties, body):
-        repo = Repo(body)
+        body = json.loads(body.decode('UTF-8'))
+        repo = Repo(body['repo'])
 
-        def publish(queue):
-            ch.basic_publish(exchange='', routing_key=queue, body=repo.name)
+        def publish(queue, body):
+            ch.basic_publish(exchange='', routing_key=queue, body=body)
+
+        def reject():
+            ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+
+        def error_body(err):
+            return json.dumps({
+                "repo": repo.name,
+                "error": str(err)
+            })
 
         try:
             file_paths = write_repo_structure(repo)
             payload = {
-                repo: repo.name,
-                file_paths: file_paths
+                "repo": repo.name,
+                "file_paths": file_paths
             }
             ch.basic_publish(exchange='', routing_key=RESULTS_QUEUE,
                              body=json.dumps(payload))
-
+            ch.basic_ack(delivery_tag=method.delivery_tag)
         except subprocess.CalledProcessError as e:
-            publish(GIT_ERROR_QUEUE)
+            sys.stderr.write(str(e) + '\n')
+            publish(GIT_ERROR_QUEUE, error_body(e))
+            reject()
         except subprocess.TimeoutExpired as e:
-            publish(GIT_TIMEOUT_QUEUE)
+            sys.stderr.write(str(e) + '\n')
+            publish(GIT_TIMEOUT_QUEUE, error_body(e))
+            reject()
         except Exception as e:
-            publish(FAILED_QUEUE)
+            sys.stderr.write(str(e) + '\n')
+            publish(FAILED_QUEUE, error_body(e))
+            reject()
 
-        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     channel.basic_consume(callback, queue=JOBS_QUEUE)
     channel.start_consuming()
@@ -138,10 +154,9 @@ def process_jobs_rabbitmq(rabbitmq_url):
 
 if __name__ == '__main__':
     args = docopt(__doc__)
+    rabbitmq_url = args['--rabbitmq']
 
-
-    if '<ampq-url>' in args:
-        rabbitmq_url = args['<ampq-url>']
+    if rabbitmq_url:
         process_jobs_rabbitmq(rabbitmq_url)
     else:
         process_jobs_stdin()
