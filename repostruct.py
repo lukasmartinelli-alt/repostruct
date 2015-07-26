@@ -3,12 +3,12 @@
 Fetch repo and write directory structure
 
 Usage:
-    repostruct.py [-t THREADS]
+    repostruct.py [--rabbitmq=<ampq-url>]
     repostruct.py (-h | --help)
 
 Options:
-    -h --help         Show this screen
-    -t THREADS        How many threads to use in ThreadPool [default: 4]
+    -h --help               Show this screen
+    --rabbitmq=<ampq-url>   Connection string for RabbitMQ 
 """
 import os
 import sys
@@ -19,6 +19,9 @@ from contextlib import contextmanager
 from multiprocessing.dummy import Pool as ThreadPool
 
 from docopt import docopt
+import pika
+
+from .rabbitmq import configure_rabbitmq
 
 
 class Repo(object):
@@ -43,6 +46,17 @@ def clone(repo):
     shutil.rmtree(temp_dir)
 
 
+def configure_rabbitmq(channel):
+
+    def queue_declare(queue)
+        return channel.queue_declare(queue=queue, durable=True)
+
+    queue_declare(JOBS_QUEUE)
+    queue_declare(FAILED_QUEUE)
+    queue_declare(DELETED_QUEUE)
+    queue_declare(TOO_BIG_QUEUE)
+
+
 def file_structure(repo_path):
     """Returns all relative file paths and filesize of a directory"""
     for path, dirs, files in os.walk(repo_path):
@@ -64,29 +78,50 @@ def write_repo_structure(repo):
     Clone repo locally and write repo name, relative filepath and
     filesize to stdout.
     """
-    try:
-        with clone(repo) as repo_path:
-            file_paths = list(file_structure(repo_path))
+    with clone(repo) as repo_path:
+        file_paths = list(file_structure(repo_path))
 
-            for path, filesize in file_paths:
-                sys.stdout.write("{0} {1} {2}\n"
-                                 .format(repo.name, path, filesize))
-            return file_paths
-    except Exception as e:
-        sys.stderr.write(str(e) + '\n')
-        return []
+        for path, filesize in file_paths:
+            sys.stdout.write("{0} {1} {2}\n"
+                             .format(repo.name, path, filesize))
+        return file_paths
 
 
-def fetch_jobs_stdin():
+def process_jobs_stdin():
     for line in sys.stdin:
-        yield Repo(line.strip())
+        repo = Repo(line.strip())
+
+        try:
+            write_repo_structure(repo)
+        except Exception as e:
+            sys.stderr.write(str(e) + '\n')
+
+
+def process_jobs_rabbitmq(rabbitmq_url):
+    connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
+    channel = connection.channel()
+    configure_rabbitmq(channel)
+
+    def callback(ch, method, properties, body):
+        repo = Repo(body)
+
+        try:
+            write_repo_structure(repo)
+        except Exception as e:
+            channel.basic_publish(exchange='', routing_key=FAILED_QUEUE,
+                                  body=repo.name)
+
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    channel.basic_consume(callback, queue=JOBS_QUEUE)
+    channel.start_consuming()
 
 
 if __name__ == '__main__':
     args = docopt(__doc__)
-    thread_count = int(args["-t"])
-    with ThreadPool(thread_count) as pool:
-        jobs = fetch_jobs_stdin()
-        pool.map(write_repo_structure, jobs)
-        pool.close()
-        pool.join()
+    rabbitmq_url = args['<ampq-url>']
+
+    if rabbitmq_url:
+        process_jobs_rabbitmq(rabbitmq_url)
+    else:
+        process_jobs_stdin()
