@@ -61,7 +61,11 @@ if __name__ == '__main__':
 
     def unique_repos(year, month, day, hour):
         url = archive_url(year, month, day, hour)
-        repos = extract_repos_from_archive_file(url)
+
+        try:
+            repos = extract_repos_from_archive_file(url)
+        except Exception as e:
+            sys.stderr.write(str(e) + '\n')
 
         for repo_name in repos:
             if repo_name not in unique_events:
