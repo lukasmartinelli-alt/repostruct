@@ -71,6 +71,14 @@ Find the top Github repos and store them in a file.
 ./top-github-repos.py js > js_repos.txt
 ```
 
+### Fetch repos from Github Archive
+
+Find all repos that were created or modified in January 2015.
+
+```
+./extract-github-repos.py 2015 1 >> 2015_jan.txt
+```
+
 ### Use redis-pipe for distributing work
 
 Run redis
