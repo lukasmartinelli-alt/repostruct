@@ -149,7 +149,12 @@ def process_jobs_rabbitmq(rabbitmq_url):
 
 
     channel.basic_consume(callback, queue=JOBS_QUEUE)
-    channel.start_consuming()
+
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        channel.stop_consuming()
+    connection.close()
 
 
 if __name__ == '__main__':
