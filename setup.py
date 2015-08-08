@@ -16,6 +16,8 @@ setup(
     include_package_data=True,
     install_requires=requires,
     zip_safe=False,
-    scripts = ['repostruct/repostruct.py', 'repostruct/rabbitmq-enqueue.py',
+    scripts = ['repostruct/fetch-file-paths.py',
+               'repostruct/fetch-metadata.py',
+               'repostruct/rabbitmq-enqueue.py',
                'repostruct/last-github-repos.py']
 )
