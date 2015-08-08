@@ -116,3 +116,18 @@ How many Go projects use Makefiles?
 ```
 cat go.txt | grep "Makefile " | sort -k 1 | cut -d " " -f 1 | uniq | wc -l
 ```
+
+## New version
+
+Fetch all GitHub repositories and their ids. This will take along time.
+
+```
+GITHUB_ACCESS_TOKEN=abd234 ./last-github-repos.py
+```
+
+Scrape the metadata for each repository.
+
+```
+cat repos.csv | cut -d ' ' -f2 | ./scrape-github-repos.py
+```
+
