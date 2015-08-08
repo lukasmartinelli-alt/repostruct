@@ -19,7 +19,7 @@ from contextlib import contextmanager
 from docopt import docopt
 import pika
 
-JOBS_QUEUE = 'repos:jobs'
+from rabbitmq import configure_rabbitmq, JOBS_QUEUE
 
 
 if __name__ == '__main__':
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     if rabbitmq_url:
         connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
         channel = connection.channel()
-        channel.queue_declare(queue=JOBS_QUEUE, durable=True)
+        configure_rabbitmq(channel)
 
         def publish(repo_name):
             body = {
