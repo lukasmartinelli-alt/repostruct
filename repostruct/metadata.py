@@ -3,7 +3,7 @@
 Fetch repository metadata
 
 Usage:
-    fetch-metadata.py repos [--rabbitmq]
+    fetch-metadata.py [--rabbitmq]
     fetch-metadata.py (-h | --help)
 
 Options:
@@ -16,27 +16,33 @@ import os
 import csv
 
 import requests
+from docopt import docopt
 from lxml import html
-   
+
 
 def fetch_metadata(repo):
-    url = 'https://github.com/' + repo.full_name
-    response = requests.get(url)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+    }
+    url = 'https://github.com/' + repo
+    response = requests.get(url, headers=headers)
     tree = html.fromstring(response.text)
 
     def extract_summary_numbers():
-        numbers = tree.xpath('//span[@class="num text-emphasized"]')
-    
-        commits = numbers[0].text.strip()
-        branches = numbers[1].text.strip()
-        releases = numbers[2].text.strip()
-        contributors = numbers[3].text.strip()
-        
-        return {        
-            "commits": commits,
-            "branches": branches,
-            "releases": releases,
-            "contributors": contributors,
+        numbers = tree.cssselect('.numbers-summary span.text-emphasized')
+        commits = numbers[0].text
+        branches = numbers[1].text
+        releases = numbers[2].text
+        contributors = numbers[3].text
+
+        if not contributors:
+            contributors = '0'
+
+        return {
+            "commits": commits.strip(),
+            "branches": branches.strip(),
+            "releases": releases.strip(),
+            "contributors": contributors.strip(),
         }
 
     def extract_social_counts():
@@ -65,7 +71,7 @@ def fetch_metadata(repo):
         "language_statistics": list(parse_language_statistics()),
     }
 
-    
+
 def process_jobs_stdin():
     writer = csv.writer(sys.stdout, delimiter=' ', quoting=csv.QUOTE_ALL)
     for line in sys.stdin:
@@ -87,17 +93,17 @@ def process_jobs_stdin():
                 ','.join(stats)
             ])
         except Exception as e:
-            print(e, file=sys.stderr)
+            raise e
+            #print(e, file=sys.stderr)
 
 
 if __name__ == '__main__':
     args = docopt(__doc__)
 
-    if '--rabbitmq' in args:
+    if args['--rabbitmq']:
         rabbitmq_url = os.getenv('RABBITMQ_URL')
         if not rabbitmq_url:
             sys.exit('You need to specify the RABBITMQ_URL env var')
         process_jobs_rabbitmq(rabbitmq_url)
     else:
-        import ipdb; ipdb.set_trace()
         process_jobs_stdin()
