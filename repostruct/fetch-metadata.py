@@ -15,13 +15,14 @@ import time
 import os
 import csv
 import traceback
+import json
 
 import requests
 import pika
 from docopt import docopt
 from lxml import html
-from rabbitmq import (configure_rabbitmq, JOBS_QUEUE,
-                      RESULTS_QUEUE, FAILED_QUEUE)
+from rabbitmq import (configure_rabbitmq, REPOS_QUEUE,
+                      METADATA_QUEUE, FAILED_QUEUE)
 
 
 class RepoNotExistsException(Exception):
@@ -123,32 +124,51 @@ def process_jobs_stdin():
 def process_jobs_rabbitmq(rabbitmq_url):
     connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
     channel = connection.channel()
+    channel.basic_qos(prefetch_count=1)
     configure_rabbitmq(channel)
+    writer = csv.writer(sys.stdout, delimiter=' ', quoting=csv.QUOTE_ALL)
 
     def callback(ch, method, properties, body):
         body = json.loads(body.decode('UTF-8'))
-        repo = Repo(body['repo'])
+        repo = body['repo']
 
         def publish(queue, body):
-            ch.basic_publish(exchange='', routing_key=queue, body=body)
+            ch.basic_publish(exchange='', routing_key=queue, body=body,
+                             properties=pika.BasicProperties(
+                                delivery_mode = 2     
+                             ))
 
         def reject():
             ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
 
         def error_body(err):
             return json.dumps({
-                "repo": repo.name,
+                "repo": repo,
                 "error": str(err)
             })
 
         try:
             metadata= fetch_metadata(repo)
             payload = {
-                "repo": repo.name,
-                "metadata": metadatas
+                "repo": repo,
+                "metadata": metadata
             }
-            ch.basic_publish(exchange='', routing_key=RESULTS_QUEUE,
-                             body=json.dumps(payload))
+
+            stats = [l + ':' + p for l, p in metadata["language_statistics"]]
+
+            writer.writerow([
+                repo,
+                metadata["summary"]["commits"],
+                metadata["summary"]["branches"],
+                metadata["summary"]["releases"],
+                metadata["summary"]["contributors"],
+                metadata["social_counts"]["watchers"],
+                metadata["social_counts"]["stars"],
+                metadata["social_counts"]["forks"],
+                ','.join(stats)
+            ])
+            
+            publish(METADATA_QUEUE, json.dumps(payload))
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception as e:
             sys.stderr.write(str(e) + '\n')
@@ -156,7 +176,7 @@ def process_jobs_rabbitmq(rabbitmq_url):
             reject()
 
 
-    channel.basic_consume(callback, queue=JOBS_QUEUE)
+    channel.basic_consume(callback, queue=REPOS_QUEUE)
 
     try:
         channel.start_consuming()
