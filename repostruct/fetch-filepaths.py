@@ -13,6 +13,7 @@ Options:
 import sys
 import time
 import os
+import random
 import json
 import csv
 import traceback
@@ -31,10 +32,15 @@ class RepoNotExistsException(Exception):
 
 
 def fetch_filepaths(repo, url, parent_directory=''):
+
+    def random_backoff():
+        time.sleep(random.randint(0, 1000)/1000)
+
     ua = UserAgent()
     headers = {
-        'User-Agent': ua.random
+        'User-Agent': ua.random # user agent cycling
     }
+    random_backoff()
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         raise RepoNotExistsException('Repo {} does not exist'.format(repo))
