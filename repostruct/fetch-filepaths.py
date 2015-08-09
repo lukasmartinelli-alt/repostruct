@@ -21,6 +21,7 @@ import requests
 import pika
 from docopt import docopt
 from lxml import html
+from fake_useragent import UserAgent
 from rabbitmq import (configure_rabbitmq, METADATA_QUEUE,
                       FILEPATHS_QUEUE, FAILED_QUEUE)
 
@@ -30,8 +31,9 @@ class RepoNotExistsException(Exception):
 
 
 def fetch_filepaths(repo, url, parent_directory=''):
+    ua = UserAgent()
     headers = {
-        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        'User-Agent': ua.random
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
