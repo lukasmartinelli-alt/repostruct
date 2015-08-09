@@ -29,7 +29,7 @@ from rabbitmq import (configure_rabbitmq, METADATA_QUEUE, GIT_ERROR_QUEUE,
                       FILEPATHS_QUEUE, FAILED_QUEUE, GIT_TIMEOUT_QUEUE)
 
 
-GIT_CLONE_TIMEOUT = 10
+GIT_CLONE_TIMEOUT = int(os.getenv('GIT_CLONE_TIMEOUT', '120'))
 
 
 class Repo(object):
@@ -120,8 +120,7 @@ def process_jobs_rabbitmq(rabbitmq_url):
             })
 
         try:
-            url = 'https://github.com/' + repo
-            filepaths = analyze_repo_structure(repo, url)
+            filepaths = analyze_repo_structure(repo)
             for filepath in filepaths:
                 writer.writerow([
                     repo.name,
@@ -129,11 +128,11 @@ def process_jobs_rabbitmq(rabbitmq_url):
                 ])
 
             payload = {
-                "repo": repo,
+                "repo": repo.name,
                 "filepaths": filepaths,
                 "metadata": metadata
             }
-            print('Published filepaths for {}'.format(repo))
+            print('Published filepaths for {}'.format(repo.name))
             publish(FILEPATHS_QUEUE, json.dumps(payload))
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except subprocess.CalledProcessError as e:
