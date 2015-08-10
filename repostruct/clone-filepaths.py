@@ -48,7 +48,8 @@ def clone(repo):
     temp_dir = tempfile.mkdtemp(suffix=repo.name.split("/")[1])
 
     with open(os.devnull, "w") as FNULL:
-        subprocess.check_call(["git", "clone", "-q", repo.url(), temp_dir],
+        subprocess.check_call(["git", "clone", "-q", "--depth", "1",
+                              repo.url(), temp_dir],
                               stdout=FNULL, stderr=subprocess.STDOUT,
                               timeout=GIT_CLONE_TIMEOUT)
     yield temp_dir
