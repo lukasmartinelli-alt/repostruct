@@ -36,6 +36,5 @@ if __name__ == '__main__':
             body = {
                 "repo": repo_name
             }
-            durable_publish(REPOS_QUEUE, body)
-            publish(repo_name)
+            durable_publish(channel, REPOS_QUEUE, json.dumps(body))
             print(repo_name)

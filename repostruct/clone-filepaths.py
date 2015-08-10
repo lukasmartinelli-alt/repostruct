@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Fetch filepaths.
+Fetch filepaths by cloning them and counting the paths.
+This is faster than accessing the repo via API!
 
 Usage:
     fetch-filepaths.py [--rabbitmq]
@@ -25,7 +26,8 @@ import requests
 import pika
 from docopt import docopt
 from lxml import html
-from rabbitmq import (configure_rabbitmq, METADATA_QUEUE, GIT_ERROR_QUEUE,
+from rabbitmq import (durable_publish, reject, configure_rabbitmq,
+                      METADATA_QUEUE, GIT_ERROR_QUEUE,
                       FILEPATHS_QUEUE, FAILED_QUEUE, GIT_TIMEOUT_QUEUE)
 
 
@@ -43,8 +45,11 @@ class Repo(object):
 
 @contextmanager
 def clone(repo):
-    """Clone a repository into a temporary directory which gets cleaned
-    up afterwards"""
+    """
+    Clone a repository into a temporary directory which gets cleaned
+    up afterwards.  This only makes a shallow clone of the last revision
+    to save bandwidth.
+    """
     temp_dir = tempfile.mkdtemp(suffix=repo.name.split("/")[1])
 
     with open(os.devnull, "w") as FNULL:
@@ -85,10 +90,7 @@ def process_jobs_stdin():
             filepaths = analyze_repo_structure(repo)
 
             for filepath in filepaths:
-                writer.writerow([
-                    repo.name,
-                    filepath
-                ])
+                writer.writerow([repo.name, filepath])
         except Exception as e:
             print(traceback.format_exc(), file=sys.stderr)
 
@@ -105,15 +107,6 @@ def process_jobs_rabbitmq(rabbitmq_url):
         repo = Repo(body['repo'])
         metadata = body['metadata']
 
-        def publish(queue, body):
-            ch.basic_publish(exchange='', routing_key=queue, body=body,
-                             properties=pika.BasicProperties(
-                                delivery_mode = 2
-                             ))
-
-        def reject():
-            ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
-
         def error_body(err):
             return json.dumps({
                 "repo": repo.name,
@@ -123,31 +116,28 @@ def process_jobs_rabbitmq(rabbitmq_url):
         try:
             filepaths = analyze_repo_structure(repo)
             for filepath in filepaths:
-                writer.writerow([
-                    repo.name,
-                    filepath
-                ])
+                writer.writerow([repo.name, filepath ])
 
             payload = {
                 "repo": repo.name,
                 "filepaths": filepaths,
                 "metadata": metadata
             }
+            durable_publish(channel, FILEPATHS_QUEUE, json.dumps(payload))
             print('Published filepaths for {}'.format(repo.name))
-            publish(FILEPATHS_QUEUE, json.dumps(payload))
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except subprocess.CalledProcessError as e:
             sys.stderr.write(str(e) + '\n')
             publish(GIT_ERROR_QUEUE, error_body(e))
-            reject()
+            reject(channel, method)
         except subprocess.TimeoutExpired as e:
             sys.stderr.write(str(e) + '\n')
-            publish(GIT_TIMEOUT_QUEUE, error_body(e))
-            reject()
+            durable_publish(channel, GIT_TIMEOUT_QUEUE, error_body(e))
+            reject(channel, method)
         except Exception as e:
             sys.stderr.write(str(e) + '\n')
-            publish(FAILED_QUEUE, error_body(e))
-            reject()
+            durable_publish(channel, FAILED_QUEUE, error_body(e))
+            reject(channel, method)
 
 
     channel.basic_consume(callback, queue=METADATA_QUEUE)

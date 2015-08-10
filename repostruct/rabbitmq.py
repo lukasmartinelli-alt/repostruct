@@ -12,11 +12,6 @@ GIT_TIMEOUT_QUEUE = 'repos:timeout'
 GIT_ERROR_QUEUE = 'repos:git_error'
 
 
-class PublishFailed(Exception)
-    """RabbitMQ basic_publish fail"""
-    pass
-
-
 def configure_rabbitmq(channel):
 
     def queue_declare(queue):
@@ -30,15 +25,11 @@ def configure_rabbitmq(channel):
     queue_declare(GIT_ERROR_QUEUE)
 
 
-def durable_publish(queue, body):
-        properties = properties=pika.BasicProperties(delivery_mode = 2)
-        body = {
-            "repo": repo_name
-        }
-        result = channel.basic_publish(exchange='', routing_key=queue,
-                                       body=body, properties=properties)
-        if not result:
-            raise PublishFailed('Could not publish to {}'.format(queue))
+def durable_publish(channel, queue, body):
+    properties = pika.BasicProperties(delivery_mode=2)
+    channel.basic_publish(exchange='', routing_key=queue,
+                          body=body, properties=properties)
 
-        return result
 
+def reject(channel, method):
+    channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)

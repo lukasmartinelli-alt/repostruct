@@ -21,8 +21,8 @@ import requests
 import pika
 from docopt import docopt
 from lxml import html
-from rabbitmq import (configure_rabbitmq, REPOS_QUEUE,
-                      METADATA_QUEUE, FAILED_QUEUE)
+from rabbitmq import (durable_publish, reject, configure_rabbitmq,
+                      REPOS_QUEUE, METADATA_QUEUE, FAILED_QUEUE)
 
 
 class RepoNotExistsException(Exception):
@@ -93,30 +93,36 @@ def fetch_metadata(repo):
     }
 
 
-def process_jobs_stdin():
+def create_output_writer():
     writer = csv.writer(sys.stdout, delimiter=' ', quoting=csv.QUOTE_ALL)
+
+    def write(repo, metadata):
+        stats = [l + ':' + p for l, p in metadata["language_statistics"]]
+        writer.writerow([
+            repo,
+            metadata["summary"]["commits"],
+            metadata["summary"]["branches"],
+            metadata["summary"]["releases"],
+            metadata["summary"]["contributors"],
+            metadata["social_counts"]["watchers"],
+            metadata["social_counts"]["stars"],
+            metadata["social_counts"]["forks"],
+            ','.join(stats)
+        ])
+
+    return write
+
+
+
+def process_jobs_stdin():
+    write = create_output_writer()
     for line in sys.stdin:
         repo = line.strip()
 
         try:
             metadata = fetch_metadata(repo)
-            stats = [l + ':' + p for l, p in metadata["language_statistics"]]
+            write(repo, metadata)
 
-            writer.writerow([
-                repo,
-                metadata["summary"]["commits"],
-                metadata["summary"]["branches"],
-                metadata["summary"]["releases"],
-                metadata["summary"]["contributors"],
-                metadata["social_counts"]["watchers"],
-                metadata["social_counts"]["stars"],
-                metadata["social_counts"]["forks"],
-                ','.join(stats)
-            ])
-        except RepoNoMetadata as e:
-            pass
-        except RepoNotExistsException as e:
-            pass
         except Exception as e:
             print(traceback.format_exc(), file=sys.stderr)
 
@@ -126,20 +132,11 @@ def process_jobs_rabbitmq(rabbitmq_url):
     channel = connection.channel()
     channel.basic_qos(prefetch_count=1)
     configure_rabbitmq(channel)
-    writer = csv.writer(sys.stdout, delimiter=' ', quoting=csv.QUOTE_ALL)
+    write = create_output_writer()
 
     def callback(ch, method, properties, body):
         body = json.loads(body.decode('UTF-8'))
         repo = body['repo']
-
-        def publish(queue, body):
-            ch.basic_publish(exchange='', routing_key=queue, body=body,
-                             properties=pika.BasicProperties(
-                                delivery_mode = 2     
-                             ))
-
-        def reject():
-            ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
 
         def error_body(err):
             return json.dumps({
@@ -153,28 +150,13 @@ def process_jobs_rabbitmq(rabbitmq_url):
                 "repo": repo,
                 "metadata": metadata
             }
-
-            stats = [l + ':' + p for l, p in metadata["language_statistics"]]
-
-            writer.writerow([
-                repo,
-                metadata["summary"]["commits"],
-                metadata["summary"]["branches"],
-                metadata["summary"]["releases"],
-                metadata["summary"]["contributors"],
-                metadata["social_counts"]["watchers"],
-                metadata["social_counts"]["stars"],
-                metadata["social_counts"]["forks"],
-                ','.join(stats)
-            ])
-            
-            publish(METADATA_QUEUE, json.dumps(payload))
+            write(repo, metadata)
+            durable_publish(channel, METADATA_QUEUE, json.dumps(payload))
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception as e:
             sys.stderr.write(str(e) + '\n')
-            publish(FAILED_QUEUE, error_body(e))
-            reject()
-
+            durable_publish(channel, FAILED_QUEUE, error_body(e))
+            reject(channel, method)
 
     channel.basic_consume(callback, queue=REPOS_QUEUE)
 
