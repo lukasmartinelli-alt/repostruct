@@ -1,4 +1,4 @@
-# repostruct
+# repostruct  [![Code Health](https://landscape.io/github/lukasmartinelli/repostruct/master/landscape.svg?style=flat)](https://landscape.io/github/lukasmartinelli/repostruct/master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/lukasmartinelli/repostruct/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/lukasmartinelli/repostruct/?branch=master) [![Dependency Status](https://gemnasium.com/lukasmartinelli/repostruct.svg)](https://gemnasium.com/lukasmartinelli/repostruct)
 
 Collect the folder structures for all Github Repositories
 of the major programming languages.
