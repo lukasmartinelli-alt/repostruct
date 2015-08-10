@@ -1,5 +1,8 @@
 # repostruct  [![Code Health](https://landscape.io/github/lukasmartinelli/repostruct/master/landscape.svg?style=flat)](https://landscape.io/github/lukasmartinelli/repostruct/master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/lukasmartinelli/repostruct/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/lukasmartinelli/repostruct/?branch=master) [![Dependency Status](https://gemnasium.com/lukasmartinelli/repostruct.svg)](https://gemnasium.com/lukasmartinelli/repostruct) [![Code Issues](http://www.quantifiedcode.com/api/v1/project/3bf206116bdd4d1e893c78ab8d93c4dc/badge.svg)](http://www.quantifiedcode.com/app/project/3bf206116bdd4d1e893c78ab8d93c4dc)
 
+**I am currently rebuilding the whole dataset. Chech back in a week and you
+have the Github filepaths of more than 6 million filepaths instead of 614k.**
+
 Collect the folder structures for all Github Repositories
 of the major programming languages.
 
