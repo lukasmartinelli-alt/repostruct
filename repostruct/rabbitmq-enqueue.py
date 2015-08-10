@@ -13,7 +13,6 @@ Options:
 import os
 import sys
 import json
-from contextlib import contextmanager
 
 from docopt import docopt
 import pika

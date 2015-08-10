@@ -16,11 +16,8 @@ Options:
 """
 import sys
 import json
-import fileinput
 import urllib.request
 import gzip
-import io
-import calendar
 
 from docopt import docopt
 

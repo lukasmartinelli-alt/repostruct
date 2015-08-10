@@ -1,8 +1,6 @@
 """
 RabbitMQ configuration (queues and topics).
 """
-import pika
-
 METADATA_QUEUE = 'repos:metadata'
 FILEPATHS_QUEUE = 'repos:filepaths'
 REPOS_QUEUE = 'repos:repos'
