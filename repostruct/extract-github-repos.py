@@ -14,6 +14,7 @@ Usage:
 Options:
     -h --help     Show help.
 """
+import sys
 import json
 import fileinput
 import urllib.request
