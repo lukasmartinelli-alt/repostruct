@@ -11,7 +11,6 @@ Options:
     --rabbitmq   Use RabbitMQ for distributing jobs
 """
 import sys
-import time
 import os
 import csv
 import traceback
@@ -42,7 +41,6 @@ def fetch_metadata(repo):
     if response.status_code != 200:
         raise RepoNotExistsException('Repo {} does not exist'.format(repo))
 
-
     tree = html.fromstring(response.text)
 
     def extract_summary_numbers():
@@ -69,9 +67,9 @@ def fetch_metadata(repo):
     def extract_social_counts():
         links = tree.cssselect('a.social-count')
         social_counts = [sc.text.strip() for sc in links]
-        watchers = social_counts[0].replace(',','')
-        stars = social_counts[1].replace(',','')
-        forks = social_counts[2].replace(',','')
+        watchers = social_counts[0].replace(',', '')
+        stars = social_counts[1].replace(',', '')
+        forks = social_counts[2].replace(',', '')
 
         return {
             "watchers": watchers,
@@ -113,7 +111,6 @@ def create_output_writer():
     return write
 
 
-
 def process_jobs_stdin():
     write = create_output_writer()
     for line in sys.stdin:
@@ -145,7 +142,7 @@ def process_jobs_rabbitmq(rabbitmq_url):
             })
 
         try:
-            metadata= fetch_metadata(repo)
+            metadata = fetch_metadata(repo)
             payload = {
                 "repo": repo,
                 "metadata": metadata
