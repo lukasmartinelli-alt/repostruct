@@ -54,7 +54,7 @@ def expand_date_args(args, date_type):
             return [x for x in range(0, 23)]
 
 
-def unique_repos(repos, year, month, day, hour):
+def unique_repos(year, month, day, hour):
     url = archive_url(year, month, day, hour)
 
     try:
@@ -81,5 +81,5 @@ if __name__ == '__main__':
         for month in months:
             for day in days:
                 for hour in hours:
-                    for repo in unique_repos(repos, year, month, day, hour):
+                    for repo in unique_repos(year, month, day, hour):
                         print(repo)
