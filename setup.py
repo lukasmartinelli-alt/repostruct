@@ -2,8 +2,11 @@ from setuptools import setup
 
 requires = [
     'docopt==0.6.2',
-    'requests==2.6.0',
+    'requests==2.7.0',
     'python3-pika==0.9.14',
+    'lxml==3.4.4',
+    'cssselect==0.9.1',
+    'fake-useragent==0.0.7',
 ]
 
 setup(
@@ -17,6 +20,8 @@ setup(
     install_requires=requires,
     zip_safe=False,
     scripts = ['repostruct/fetch-metadata.py',
-               'repostruct/rabbitmq-enqueue.py',
-               'repostruct/last-github-repos.py']
+               'repostruct/enqueue-repos-rabbitmq.py',
+               'repostruct/clone-filepaths.py',
+               'repostruct/extract-github-repos.py',
+               'repostruct/fetch-latest-github-repos.py']
 )
