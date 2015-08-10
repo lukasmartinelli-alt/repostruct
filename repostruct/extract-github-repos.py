@@ -47,9 +47,9 @@ def expand_date_args(args, date_type):
         return [int(date_arg)]
     else:
         if date_type == 'month':
-            return [x for x in range(1,12)]
+            return [x for x in range(1, 12)]
         elif date_type == 'day':
-            return [x for x in range(1,31)]
+            return [x for x in range(1, 31)]
         elif date_type == 'hour':
             return [x for x in range(0, 23)]
 
