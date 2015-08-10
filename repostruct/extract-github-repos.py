@@ -41,43 +41,45 @@ def extract_repos_from_archive_file(archive_url):
             raise
 
 
+def expand_date_args(args, date_type):
+    date_arg = args['<' + date_type + '>']
+    if date_arg:
+        return [int(date_arg)]
+    else:
+        if date_type == 'month':
+            return [x for x in range(1,12)]
+        elif date_type == 'day':
+            return [x for x in range(1,31)]
+        elif date_type == 'hour':
+            return [x for x in range(0, 23)]
+
+
+def unique_repos(repos, year, month, day, hour):
+    url = archive_url(year, month, day, hour)
+
+    try:
+        repos = extract_repos_from_archive_file(url)
+    except Exception as e:
+        sys.stderr.write(str(e) + '\n')
+
+    for repo_name in repos:
+        if repo_name not in unique_events:
+            unique_events[repo_name] = True
+            yield repo_name
+
+
 if __name__ == '__main__':
     args = docopt(__doc__)
     unique_events = {}
 
-    def expand_date_args(date_type):
-        date_arg = args['<' + date_type + '>']
-        if date_arg:
-            return [int(date_arg)]
-        else:
-            if date_type == 'month':
-                return [x for x in range(1,12)]
-            elif date_type == 'day':
-                return [x for x in range(1,31)]
-            elif date_type == 'hour':
-                return [x for x in range(0, 23)]
-
-    def unique_repos(year, month, day, hour):
-        url = archive_url(year, month, day, hour)
-
-        try:
-            repos = extract_repos_from_archive_file(url)
-        except Exception as e:
-            sys.stderr.write(str(e) + '\n')
-
-        for repo_name in repos:
-            if repo_name not in unique_events:
-                unique_events[repo_name] = True
-                yield repo_name
-
-    years = expand_date_args('year')
-    months = expand_date_args('month')
-    days = expand_date_args('day')
-    hours = expand_date_args('hour')
+    years = expand_date_args(args, 'year')
+    months = expand_date_args(args, 'month')
+    days = expand_date_args(args, 'day')
+    hours = expand_date_args(args, 'hour')
 
     for year in years:
         for month in months:
             for day in days:
                 for hour in hours:
-                    for repo_name in unique_repos(year, month, day, hour):
-                        print(repo_name)
+                    for repo in unique_repos(repos, year, month, day, hour):
+                        print(repo)
