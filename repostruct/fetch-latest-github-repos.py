@@ -26,8 +26,7 @@ if __name__ == '__main__':
     args = docopt(__doc__)
 
     if not GITHUB_ACCESS_TOKEN:
-        msg = 'You need to provide the GITHUB_ACCESS_TOKEN env var'
-        print(msg, file=sys.stderr)
+        sys.exit('You need to specify the GITHUB_ACCESS_TOKEN env var')
 
     last_repo_id = int(args.get('<last-repo-id>', '-1'))
 

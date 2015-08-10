@@ -17,7 +17,7 @@ import json
 from docopt import docopt
 import pika
 
-from rabbitmq import configure_rabbitmq, REPOS_QUEUE
+from rabbitmq import configure_rabbitmq, durable_publish, REPOS_QUEUE
 
 
 if __name__ == '__main__':
@@ -30,18 +30,12 @@ if __name__ == '__main__':
     channel = connection.channel()
     configure_rabbitmq(channel)
 
-    def publish(repo_name):
-        body = {
-            "repo": repo_name
-        }
-        channel.basic_publish(exchange='', routing_key=REPOS_QUEUE,
-                              body=json.dumps(body),
-                              properties=pika.BasicProperties(
-                                delivery_mode = 2     
-                              ))
-
     for line in sys.stdin:
         repo_name = line.strip()
         if repo_name:
+            body = {
+                "repo": repo_name
+            }
+            durable_publish(REPOS_QUEUE, body)
             publish(repo_name)
             print(repo_name)
