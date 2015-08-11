@@ -13,6 +13,7 @@ GIT_ERROR_QUEUE = 'repos:git_error'
 
 
 def configure_rabbitmq(channel):
+    """Setup all queues and topcis for RabbitMQ"""
 
     def queue_declare(queue):
         return channel.queue_declare(queue=queue, durable=True)

@@ -125,7 +125,7 @@ def process_jobs_rabbitmq(rabbitmq_url):
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except subprocess.CalledProcessError as e:
             sys.stderr.write(str(e) + '\n')
-            durable_publish(GIT_ERROR_QUEUE, error_body(e))
+            durable_publish(channel, GIT_ERROR_QUEUE, error_body(e))
             reject(channel, method)
         except subprocess.TimeoutExpired as e:
             sys.stderr.write(str(e) + '\n')

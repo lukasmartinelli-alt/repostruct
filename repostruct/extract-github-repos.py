@@ -23,6 +23,7 @@ from docopt import docopt
 
 
 def archive_url(year, month, day, hour):
+    """Create the Github archive url for a certain date"""
     url = 'http://data.githubarchive.org/{0}-{1:0>2d}-{2:0>2d}-{3}.json.gz'
     return url.format(year, month, day, hour)
 
