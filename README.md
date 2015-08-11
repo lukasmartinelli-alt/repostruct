@@ -63,6 +63,23 @@ and the filesize.
 "abergen84/Robot-Missions","heroku-server.js",37
 ```
 
+## New Data sample
+The data is stored as a csv file with ` ` as delimiter and `"` as quote character.
+The columns contain the full GitHub repository name and the relative filepath.
+
+```
+"abergen84/Robot-Missions" "css/style.css"
+"abergen84/Robot-Missions" "js/app.js",629"
+"abergen84/Robot-Missions" "js/RobotWars.js"
+"abergen84/Robot-Missions" "test.html"
+"abergen84/Robot-Missions" "package.json"
+"abergen84/Robot-Missions" "server.js"
+"abergen84/Robot-Missions" "index.html"
+"abergen84/Robot-Missions" "gulpfile.js"
+"abergen84/Robot-Missions" "Procfile"
+"abergen84/Robot-Missions" "heroku-server.js"
+```
+
 ## Run it yourself
 
 ### Fetch latest GitHub repos
@@ -114,26 +131,3 @@ I normally do this in batches of 100.
 ```
 ./redis-pipe --count 100 repostruct:repos | ./repostruct.py | ./redis-pipe repostruct:results
 ```
-
-## Analyze
-
-How many Go projects use Makefiles?
-
-```
-cat go.txt | grep "Makefile " | sort -k 1 | cut -d " " -f 1 | uniq | wc -l
-```
-
-## New version
-
-Fetch all GitHub repositories and their ids. This will take along time.
-
-```
-GITHUB_ACCESS_TOKEN=abd234 ./last-github-repos.py
-```
-
-Scrape the metadata for each repository.
-
-```
-cat repos.csv | cut -d ' ' -f2 | ./scrape-github-repos.py
-```
-
