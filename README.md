@@ -65,13 +65,16 @@ and the filesize.
 
 ## Run it yourself
 
-### Fetch top C++ repos on Github
+### Fetch latest GitHub repos
 
-Find the top Github repos and store them in a file.
+Iterate through all repositories from GitHub
+that are not forks.
+If the program times out due to API limitations you can simply
+continue with the last repository id you fetched.
 
 ```
-./top-github-repos.py cpp > cpp_repos.txt
-./top-github-repos.py js > js_repos.txt
+export GITHUB_ACCESS_TOKEN="adsf24.."
+./fetch-latest-github-repos.py <last-repo-id>
 ```
 
 ### Fetch repos from Github Archive
