@@ -151,7 +151,7 @@ def process_jobs_rabbitmq(rabbitmq_url):
             write(repo, metadata)
             durable_publish(channel, METADATA_QUEUE, json.dumps(payload))
             ch.basic_ack(delivery_tag=method.delivery_tag)
-        except RepoNoMetadat as e:
+        except RepoNoMetadata as e:
             sys.stderr.write(str(e) + '\n')
             durable_publish(channel, NO_METADATA_QUEUE, error_body(e))
             reject(channel, method)
