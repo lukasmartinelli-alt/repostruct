@@ -21,7 +21,8 @@ import pika
 from docopt import docopt
 from lxml import html
 from rabbitmq import (durable_publish, reject, configure_rabbitmq,
-                      REPOS_QUEUE, METADATA_QUEUE, FAILED_QUEUE)
+                      REPOS_QUEUE, METADATA_QUEUE, FAILED_QUEUE,
+                      NO_METADATA_QUEUE)
 
 
 class RepoNotExistsException(Exception):
@@ -150,6 +151,10 @@ def process_jobs_rabbitmq(rabbitmq_url):
             write(repo, metadata)
             durable_publish(channel, METADATA_QUEUE, json.dumps(payload))
             ch.basic_ack(delivery_tag=method.delivery_tag)
+        except RepoNoMetadat as e:
+            sys.stderr.write(str(e) + '\n')
+            durable_publish(channel, NO_METADATA_QUEUE, error_body(e))
+            reject(channel, method)
         except Exception as e:
             sys.stderr.write(str(e) + '\n')
             durable_publish(channel, FAILED_QUEUE, error_body(e))

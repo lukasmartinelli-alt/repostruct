@@ -5,6 +5,7 @@ import pika
 
 
 METADATA_QUEUE = 'repos:metadata'
+NO_METADATA_QUEUE = 'repos:no_metadata'
 FILEPATHS_QUEUE = 'repos:filepaths'
 REPOS_QUEUE = 'repos:repos'
 FAILED_QUEUE = 'repos:failed'
@@ -24,6 +25,7 @@ def configure_rabbitmq(channel):
     queue_declare(FAILED_QUEUE)
     queue_declare(GIT_TIMEOUT_QUEUE)
     queue_declare(GIT_ERROR_QUEUE)
+    queue_declare(NO_METADATA_QUEUE)
 
 
 def durable_publish(channel, queue, body):
