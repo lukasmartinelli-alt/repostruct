@@ -135,6 +135,7 @@ def process_jobs_rabbitmq(rabbitmq_url):
             sys.stderr.write(str(e) + '\n')
             durable_publish(channel, FAILED_QUEUE, error_body(e))
             reject(channel, method)
+            raise
 
     channel.basic_consume(callback, queue=METADATA_QUEUE)
 
