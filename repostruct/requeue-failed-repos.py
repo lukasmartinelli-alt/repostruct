@@ -21,7 +21,8 @@ import pika
 from docopt import docopt
 from rabbitmq import (durable_publish, reject, configure_rabbitmq,
                       REPOS_QUEUE, METADATA_QUEUE, FAILED_QUEUE,
-                      GIT_TIMEOUT_QUEUE, GIT_ERROR_QUEUE, NO_METADATA_QUEUE)
+                      GIT_TIMEOUT_QUEUE, GIT_ERROR_QUEUE, NO_METADATA_QUEUE,
+                      NOT_EXISTS_QUEUE)
 
 
 def process_fails(rabbitmq_url, queue):
@@ -38,6 +39,9 @@ def process_fails(rabbitmq_url, queue):
 
         if 'has no metadata' in err:
             delivery_queue = NO_METADATA_QUEUE
+
+        if 'does not exist' in err:
+            delivery_queue = NOT_EXISTS_QUEUE
 
         print('{} {}'.format(repo, body))
 

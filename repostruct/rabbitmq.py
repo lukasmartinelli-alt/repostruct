@@ -11,6 +11,7 @@ REPOS_QUEUE = 'repos:repos'
 FAILED_QUEUE = 'repos:failed'
 GIT_TIMEOUT_QUEUE = 'repos:timeout'
 GIT_ERROR_QUEUE = 'repos:git_error'
+NOT_EXISTS_QUEUE = 'repos:not_exists'
 
 
 def configure_rabbitmq(channel):
@@ -26,6 +27,7 @@ def configure_rabbitmq(channel):
     queue_declare(GIT_TIMEOUT_QUEUE)
     queue_declare(GIT_ERROR_QUEUE)
     queue_declare(NO_METADATA_QUEUE)
+    queue_declare(NOT_EXISTS_QUEUE)
 
 
 def durable_publish(channel, queue, body):
