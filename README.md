@@ -25,6 +25,34 @@ You can download the datasets for the individual languages here:
 You can also [download a PostgreSQL database backup](https://s3-eu-west-1.amazonaws.com/repostruct/repostruct_backup.tar) and import it for further analysis.
 But be warned, It takes along time even with a 250GB Memory machine.
 
+## New Dataset
+
+Each set is a 300MB compressed JSON file (2GB uncompressed) of repo samples.
+The entire data set contains about 6 million repositories.
+
+```bash
+wget https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-{1..18}.json.tar.gz
+```
+
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-1.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-2.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-3.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-4.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-5.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-6.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-7.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-8.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-9.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-10.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-11.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-12.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-13.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-14.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-15.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-16.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-17.json.tar.gz
+- https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-18.json.tar.gz
+
 ## Questions
 
 Folder structures are pretty boring you think?
