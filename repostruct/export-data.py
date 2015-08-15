@@ -18,13 +18,13 @@ import json
 import pika
 from docopt import docopt
 from rabbitmq import (durable_publish, configure_rabbitmq,
-                      FILEPATHS_QUEUE, FILEPATHS_ARCHIVE_QUEUE)
+                      FILEPATHS_QUEUE)
 
 
 def export_filepaths(rabbitmq_url):
     connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
     channel = connection.channel()
-    channel.basic_qos(prefetch_count=1)
+    channel.basic_qos(prefetch_count=5)
     configure_rabbitmq(channel)
 
     def callback(ch, method, properties, body):
@@ -32,8 +32,6 @@ def export_filepaths(rabbitmq_url):
         print(json.dumps(body))
 
         try:
-            durable_publish(channel, FILEPATHS_ARCHIVE_QUEUE,
-                            json.dumps(body))
             channel.basic_ack(delivery_tag=method.delivery_tag)
         except Exception as e:
             channel.basic_reject(delivery_tag=method.delivery_tag, requeue=True)

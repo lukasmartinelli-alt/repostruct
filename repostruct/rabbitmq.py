@@ -24,7 +24,6 @@ def configure_rabbitmq(channel):
     queue_declare(REPOS_QUEUE)
     queue_declare(METADATA_QUEUE)
     queue_declare(FILEPATHS_QUEUE)
-    queue_declare(FILEPATHS_ARCHIVE_QUEUE)
     queue_declare(FAILED_QUEUE)
     queue_declare(GIT_TIMEOUT_QUEUE)
     queue_declare(GIT_ERROR_QUEUE)
