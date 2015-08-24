@@ -70,43 +70,57 @@ This dataset could help to answer questions like below:
 - [ ] Which programming languages have the deepest folder hierarchies (I guess Java?)
 - [ ] Do people keep executables or build artifacts in their repos?
 
-I blogged
-
 ## Data sample
 
-The data is stored as a csv file with `,` as delimiter and `"` as quote character.
-The columns contain the full Github repository name, the relative filepath
-and the filesize.
+The data is stored as a JSON file (like the GitHub archive logs)
+with a single JSON object per line.
 
-```
-"abergen84/Robot-Missions","css/style.css",2255
-"abergen84/Robot-Missions","js/app.js",629
-"abergen84/Robot-Missions","js/RobotWars.js",5599
-"abergen84/Robot-Missions","test.html",942
-"abergen84/Robot-Missions","package.json",840
-"abergen84/Robot-Missions","server.js",1429
-"abergen84/Robot-Missions","index.html",2654
-"abergen84/Robot-Missions","gulpfile.js",607
-"abergen84/Robot-Missions","Procfile",27
-"abergen84/Robot-Missions","heroku-server.js",37
+Below is an example how the data is structured
+(for clarity I split it up on multiple lines).
+
+
+```json
+{
+
+  "repo":"aelydens/ruby-ridb",
+  "metadata":{
+    "repo":"aelydens/ruby-ridb",
+    "social_counts":{
+      "watchers":"1",
+      "forks":"0",
+      "stars":"0"
+    },
+    "language_statistics":[
+      ["Ruby", "100.0"]
+    ],
+    "summary":{
+      "commits":"9",
+      "branches":"1",
+      "contributors":"0",
+      "releases":"0"
+    }
+  },
+  "filepaths":[
+    "ruby-ridb-0.1.0.gem",
+    "ridb.gemspec",
+    "Gemfile.lock",
+    "README.md",
+    "Gemfile",
+    ".env",
+    ".rspec",
+    "lib/ridb/campsite.rb",
+    "lib/ridb/search.rb",
+    "lib/ridb/recarea.rb",
+    "lib/ridb/facility.rb",
+    "lib/ridb/client.rb",
+    "lib/ridb/organization.rb",
+    "spec/spec_helper.rb"
+  ]
+}
 ```
 
-## New Data sample
-The data is stored as a csv file with ` ` as delimiter and `"` as quote character.
-The columns contain the full GitHub repository name and the relative filepath.
-
-```
-"abergen84/Robot-Missions" "css/style.css"
-"abergen84/Robot-Missions" "js/app.js",629"
-"abergen84/Robot-Missions" "js/RobotWars.js"
-"abergen84/Robot-Missions" "test.html"
-"abergen84/Robot-Missions" "package.json"
-"abergen84/Robot-Missions" "server.js"
-"abergen84/Robot-Missions" "index.html"
-"abergen84/Robot-Missions" "gulpfile.js"
-"abergen84/Robot-Missions" "Procfile"
-"abergen84/Robot-Missions" "heroku-server.js"
-```
+The `language_statistics` contains the percentage of the languages found
+in the repository.
 
 ## Run it yourself
 
@@ -128,34 +142,4 @@ Find all repos that were created or modified in January 2015.
 
 ```
 ./extract-github-repos.py 2015 1 >> 2015_jan.txt
-```
-
-### Use redis-pipe for distributing work
-
-Run redis
-
-```
-docker run --name redis -p 6379:6379 -d redis
-```
-
-I use my other Project [redis-pipe](https://github.com/lukasmartinelli/redis-pipe)
-for distributing jobs via a Redis List.
-
-Install
-
-```
-wget https://github.com/lukasmartinelli/redis-pipe/releases/download/v1.4/redis-pipe
-```
-
-Enqueue repos to analyze
-
-```
-cat js_repos.txt | ./redis-pipe repostruct:repos
-```
-
-Analyze repo folder structure and put results into another list.
-I normally do this in batches of 100.
-
-```
-./redis-pipe --count 100 repostruct:repos | ./repostruct.py | ./redis-pipe repostruct:results
 ```
